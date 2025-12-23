@@ -36,7 +36,7 @@ public class Test implements Subsystem{
     }
 
     public void MoveTest(){
-        // motor.set(0.2);
+        motor.set(0.2);
         System.out.println("hello");
     }
 

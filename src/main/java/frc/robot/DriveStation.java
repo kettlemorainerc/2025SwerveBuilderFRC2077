@@ -1,5 +1,9 @@
 package frc.robot;
 
+import com.ctre.phoenix6.swerve.SwerveRequest;
+
+import edu.wpi.first.math.geometry.Rotation2d;
+
 /*----------------------------------------------------------------------------*/
 /* Copyright (c) 2020 FRC Team 2077. All Rights Reserved.                     */
 /* Open Source Software - may be modified and shared by FRC teams.            */
@@ -7,10 +11,12 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj2.command.button.*;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.command.*;
 import frc.robot.control.DriveJoystick;
 import frc.robot.control.DriveStick;
 import frc.robot.control.DriveXboxController;
+import frc.robot.subsystems.CommandSwerveDrivetrain;
 
 /**
  * This class is intended to be the center point of defining actions that can be utilized during teleop segments of
@@ -33,6 +39,9 @@ public class DriveStation {
 
     private final XboxController halfSwitch;
 
+    private final CommandXboxController driveNewJoystick = new CommandXboxController(0);
+
+
     public DriveStation(RobotHardware hardware) {
         /** Set the driver's control method this MUST be a {@link DriveStick} implementation */
 //        driveStick = getFlysky();
@@ -52,12 +61,15 @@ public class DriveStation {
      * control method.
      */
     public void bind(RobotHardware hardware) {
+        System.out.println("BIND ROBOT HARDWARE!!!");
+
         // Setup basic robot movement commands
         // hardware.getPosition().setDefaultCommand(new CardinalMovement((DriveXboxController) driveStick, halfSwitch));
         // hardware.getHeading().setDefaultCommand(new RotationMovement(driveStick, halfSwitch));
 
         bindDriverControl(hardware, driveStick);
         bindTechnicalControl(hardware, technicalStick);
+        configureBindings();
     }
 
     /** Bind primary driver's button commands here */
@@ -66,9 +78,10 @@ public class DriveStation {
 
     /** Bind technical driver button commands here */
     private void bindTechnicalControl(RobotHardware hardware, Joystick secondary) {
+        System.out.println("test thing!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1");
         // new NewTest(Direction.AUTO).bind(new JoystickButton(secondary, 10));
         // new NewTest(Direction.FORWARD).bind(new JoystickButton(secondary, 11));
-        new TestControl().bind(new JoystickButton(secondary, 0));
+        new TestControl().bind(new JoystickButton(secondary, 1));
         // final TestControl testControl = new TestControl();
         //testControl.bind(new JoystickButton(secondary,1));
     }
@@ -76,7 +89,7 @@ public class DriveStation {
 
 
     /** Normal (silver/brighter) joystick that supports rotation */
-    private static DriveJoystick getJoystick() {
+    private static DriveJoystick getDriveNewJoystick() {
         return new DriveJoystick(DRIVE_JOYSTICK_PORT).setDriveSensitivity(.15, 5)
                                                      .setRotationSensitivity(.1, 1);
     }
@@ -98,6 +111,8 @@ public class DriveStation {
     }
 
     private static Joystick getNumpad() {
+        System.out.println("getNumpad!!!");
+
         return new Joystick(NUMPAD_PORT);
     }
 
@@ -105,4 +120,44 @@ public class DriveStation {
     // public static void useCommand(Joystick joystick, int button, BindableCommand command) {
     //     // command.bind(new JoystickButton(joystick, button));
     // }
+    private void configureBindings() {
+        CommandSwerveDrivetrain drivetrain = RobotHardware.getInstance().drivetrain;
+
+
+        // Note that X is defined as forward according to WPILib convention,
+        // and Y is defined as to the left according to WPILib convention.
+        drivetrain.setDefaultCommand(
+            // Drivetrain will execute this command periodically
+            drivetrain.applyRequest(() ->
+                RobotContainer.drive.withVelocityX(-driveNewJoystick.getLeftY() * RobotContainer.MaxSpeed * 0.1) // Drive forward with negative Y (forward)
+                    .withVelocityY(-driveNewJoystick.getLeftX() * RobotContainer.MaxSpeed * 0.1) // Drive left with negative X (left)
+                    .withRotationalRate(-driveNewJoystick.getRightX() * RobotContainer.MaxAngularRate * 0.1) // Drive counterclockwise with negative X (left)
+            )
+        );
+
+        // Idle while the robot is disabled. This ensures the configured
+        // neutral mode is applied to the drive motors while disabled.
+        final var idle = new SwerveRequest.Idle();
+        RobotModeTriggers.disabled().whileTrue(
+            drivetrain.applyRequest(() -> idle).ignoringDisable(true)
+        );
+
+        driveNewJoystick.a().whileTrue(drivetrain.applyRequest(() -> RobotContainer.brake));
+        driveNewJoystick.b().whileTrue(drivetrain.applyRequest(() ->
+            RobotContainer.point.withModuleDirection(new Rotation2d(-driveNewJoystick.getLeftY(), -driveNewJoystick.getLeftX()))
+        ));
+
+        // Run SysId routines when holding back/start and X/Y.
+        // Note that each routine should be run exactly once in a single log.
+        driveNewJoystick.back().and(driveNewJoystick.y()).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
+        driveNewJoystick.back().and(driveNewJoystick.x()).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
+        driveNewJoystick.start().and(driveNewJoystick.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
+        driveNewJoystick.start().and(driveNewJoystick.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
+
+        // reset the field-centric heading on left bumper press
+        driveNewJoystick.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
+
+        // drivetrain.registerTelemetry(logger::telemeterize);
+        // TODO: PUT THIS BACK!
+    }
 }

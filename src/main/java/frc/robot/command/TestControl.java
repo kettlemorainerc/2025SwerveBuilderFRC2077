@@ -4,7 +4,7 @@ import frc.robot.RobotHardware;
 import frc.robot.subsystems.Test;
 // import frc.robot.command.newRepeatedCommand;
 
-public class TestControl extends frc.robot.command.NewRepeatedCommand{
+public class TestControl extends NewRepeatedCommand{
     private final Test test;
 
     public TestControl(){
@@ -19,6 +19,7 @@ public class TestControl extends frc.robot.command.NewRepeatedCommand{
 
     @Override
     public void execute() {
+        System.out.println("execute");
         test.MoveTest();
     }
 
