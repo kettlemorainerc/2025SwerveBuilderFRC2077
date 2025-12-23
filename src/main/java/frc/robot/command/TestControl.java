@@ -9,23 +9,20 @@ public class TestControl extends NewRepeatedCommand{
 
     public TestControl(){
         test = RobotHardware.getInstance().test;
-        System.out.println("construct");
     }
     
     @Override
     public void initialize(){
-        System.out.println("initialize");
+        test.startMoveTest();
     }
 
     @Override
     public void execute() {
-        System.out.println("execute");
-        test.MoveTest();
     }
 
     @Override
     public void end(boolean interrupted) {
-        // TODO: 
+        test.endMoveTest();
     }
 
 

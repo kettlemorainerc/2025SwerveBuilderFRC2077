@@ -35,10 +35,12 @@ public class Test implements Subsystem{
 
     }
 
-    public void MoveTest(){
+    public void startMoveTest(){
         motor.set(0.2);
-        System.out.println("hello");
     }
 
+    public void endMoveTest(){
+        motor.set(0);
+    }
 
 }
