@@ -9,6 +9,15 @@ public class RobotHardware{
     private static RobotHardware instance = null;
     public static CommandSwerveDrivetrain drivetrain = null;
 
+    /* CAN Ordering:
+     * 0-20 (Avoided to exclude legacy setups)
+     * 21-30 (Swerve Drive Modules)
+     *     - Even: Magnitude
+     *     - Odd: Angle
+     * 31-40 (Encoders+)
+     * 41-50 (Reserved for future uses)
+     * 50-70 (Other Motors)
+     */
 
     public static RobotHardware getInstance(){
         if(instance == null) instance = new RobotHardware();
@@ -23,5 +32,7 @@ public class RobotHardware{
         test = new Test();
         drivetrain = TunerConstants.createDrivetrain();
     }
+
+
 
 }

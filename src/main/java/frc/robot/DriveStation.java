@@ -69,7 +69,7 @@ public class DriveStation {
 
         bindDriverControl(hardware, driveStick);
         bindTechnicalControl(hardware, technicalStick);
-        configureBindings();
+        configureDriveControls();
     }
 
     /** Bind primary driver's button commands here */
@@ -119,7 +119,7 @@ public class DriveStation {
     // public static void useCommand(Joystick joystick, int button, BindableCommand command) {
     //     // command.bind(new JoystickButton(joystick, button));
     // }
-    private void configureBindings() {
+    private void configureDriveControls() {
         CommandSwerveDrivetrain drivetrain = RobotHardware.getInstance().drivetrain;
 
 
